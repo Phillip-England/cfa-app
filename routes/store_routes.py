@@ -29,7 +29,32 @@ def store_routes(app: FastAPI, mongo: db.Mongo):
             db.assert_unique(
                 mongo.stores, {"user": user._id, "number": b.number}
             ).http_err(400, "you already have a store with this number")
-            store_result = db.create_store(mongo.stores, store_model)
+            store_result = db.insert_store(mongo.stores, store_model)
             return http.success(res, 200, data=store_result.__dict__())
+        except Exception as err:
+            return error.http_pipe(err, res)
+
+    @app.get("/store")
+    def get_stores(req: Request, res: Response):
+        try:
+            user = middleware.auth(req, mongo).http_unwrap(401, "unauthorized")
+            stores = db.get_all_user_stores(mongo.stores, user._id)
+            for store in stores:
+                print(store)
+            return http.success(res, 200)
+        except Exception as err:
+            return error.http_pipe(err, res)
+
+    @app.delete("/store/{id}")
+    def delete_store_by_id(req: Request, res: Response, id: str):
+        try:
+            user = middleware.auth(req, mongo).http_unwrap(401, "unauthorized")
+            valid.assert_object_id(id).http_err(400, "invalid id")
+            store_result = db.find_store_by_id(mongo.stores, id).http_unwrap(
+                400, "invalid id"
+            )
+            valid.assert_equal(store_result.user, user._id).http_err(403, "forbidden")
+            db.delete_store_by_id(mongo.stores, id)
+            return http.success(res, 200)
         except Exception as err:
             return error.http_pipe(err, res)

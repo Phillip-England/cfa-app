@@ -7,4 +7,7 @@ from .user_drop_all_sessions import user_drop_all_sessions
 from .find_session_by_id import find_session_by_id
 from .find_user_by_id import find_user_by_id
 from .delete_user_by_id import delete_user_by_id
-from .create_store import create_store
+from .insert_store import insert_store
+from .get_all_user_stores import get_all_user_stores
+from .find_store_by_id import find_store_by_id
+from .delete_store_by_id import delete_store_by_id
