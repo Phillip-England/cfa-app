@@ -30,7 +30,7 @@ def store_routes(app: FastAPI, mongo: db.Mongo):
                 mongo.stores, {"user": user._id, "number": b.number}
             ).http_err(400, "you already have a store with this number")
             store_result = db.insert_store(mongo.stores, store_model)
-            return http.success(res, 200, data=store_result.__dict__())
+            return http.success(res, 201, data=store_result.__dict__())
         except Exception as err:
             return error.http_pipe(err, res)
 

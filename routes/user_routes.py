@@ -25,7 +25,7 @@ def user_routes(app: FastAPI, mongo: db.Mongo):
             )
             user_result = db.insert_user(user_model, mongo.users)
             user_response = UserResponse(user_result._id, user_result.email)
-            return http.success(res, 200, user_response.__dict__())
+            return http.success(res, 201, user_response.__dict__())
         except Exception as err:
             return error.http_pipe(err, res)
 
