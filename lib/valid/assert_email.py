@@ -1,9 +1,9 @@
 import re
-from lib import error
+from lib import sys
 
 
-def assert_email(string: str) -> error.DynErr:
+def assert_email(string: str) -> sys.Result:
     pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     if re.match(pattern, string) == None:
-        return error.DynErr("invalid email")
-    return error.DynErr()
+        return sys.Result().err()
+    return sys.Result()

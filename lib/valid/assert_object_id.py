@@ -1,11 +1,11 @@
 from bson import ObjectId
 
-from lib import error
+from lib import sys
 
 
 def assert_object_id(some_string: str):
     try:
         ObjectId(some_string)
-        return error.DynErr()
+        return sys.Result()
     except Exception as err:
-        return error.DynErr(err="invalid object id")
+        return sys.Result().err()

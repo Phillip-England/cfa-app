@@ -1,9 +1,9 @@
-from lib import error
+from lib import sys
 
 
 def assert_int(value: any):
     try:
         int(value)
-        return error.DynErr()
+        return sys.Result()
     except Exception as err:
-        return error.DynErr("cannot convert value to int")
+        return sys.Result().err()

@@ -1,10 +1,10 @@
 from pymongo.collection import Collection
 
-from lib.error import DynErr
+from lib import sys
 
 
 def assert_unique(collection: Collection, filter: dict):
     doc = collection.find_one(filter)
     if doc != None:
-        return DynErr("mongo doc already exists")
-    return DynErr()
+        return sys.Result().err()
+    return sys.Result()

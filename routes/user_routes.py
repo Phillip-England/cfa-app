@@ -16,17 +16,22 @@ def user_routes(app: FastAPI, mongo: db.Mongo):
     @app.post("/user")
     def create_user(b: ReqCreateUser, req: Request, res: Response):
         try:
-            valid.assert_email(b.email).http_err(400, "invalid email")
-            valid.assert_min(b.password, 5).http_err(400, "password too short")
-            valid.assert_max(b.password, 64).http_err(400, "password too long")
+            valid.assert_email(b.email).unwrap(error.HttpErr(400, "invalid email"))
+            valid.assert_min(b.password, 5).unwrap(
+                error.HttpErr(400, "password too short")
+            )
+            valid.assert_max(b.password, 64).unwrap(
+                error.HttpErr(400, "password too long")
+            )
             user_model = UserModel(b.email, hash.hash_string(b.password))
-            db.assert_unique(mongo.users, {"email": user_model.email}).http_err(
-                400, "user already exists"
+            db.assert_unique(mongo.users, {"email": user_model.email}).unwrap(
+                error.HttpErr(400, "user already exists")
             )
             user_result = db.insert_user(user_model, mongo.users)
             user_response = UserResponse(user_result._id, user_result.email)
             return http.success(res, 201, user_response.__dict__())
         except Exception as err:
+            print(err)
             return error.http_pipe(err, res)
 
     class ReqLoginUser(BaseModel):
@@ -36,11 +41,11 @@ def user_routes(app: FastAPI, mongo: db.Mongo):
     @app.post("/user/login")
     def login_user(b: ReqLoginUser, req: Request, res: Response):
         try:
-            user = db.find_user_by_email(mongo.users, b.email).http_unwrap(
-                400, "invalid credentials"
+            user = db.find_user_by_email(mongo.users, b.email).unwrap(
+                error.HttpErr(400, "invalid credentials")
             )
-            hash.compare_hash(b.password, user.password).http_err(
-                400, "invalid credentials"
+            hash.compare_hash(b.password, user.password).unwrap(
+                error.HttpErr(400, "invalid credentials")
             )
             session_model = SessionModel(user._id)
             db.user_drop_all_sessions(mongo.sessions, user._id)
@@ -58,7 +63,9 @@ def user_routes(app: FastAPI, mongo: db.Mongo):
     @app.get("/user")
     def get_user(req: Request, res: Response):
         try:
-            user = middleware.auth(req, mongo).http_unwrap(401, "unauthorized")
+            user = middleware.auth(req, mongo).unwrap(
+                error.HttpErr(401, "unauthorized")
+            )
             user_response = UserResponse(user._id, user.email)
             return http.success(res, 200, user_response.__dict__())
         except Exception as err:
@@ -67,7 +74,9 @@ def user_routes(app: FastAPI, mongo: db.Mongo):
     @app.get("/user/logout")
     def logout_user(req: Request, res: Response):
         try:
-            user = middleware.auth(req, mongo).http_unwrap(401, "unauthorized")
+            user = middleware.auth(req, mongo).unwrap(
+                error.HttpErr(401, "unauthorized")
+            )
             db.user_drop_all_sessions(mongo.sessions, user._id)
             res.set_cookie(key="session_token", value="")
             return http.success(res, 200)
@@ -77,7 +86,9 @@ def user_routes(app: FastAPI, mongo: db.Mongo):
     @app.delete("/user")
     def delete_user(req: Request, res: Response):
         try:
-            user = middleware.auth(req, mongo).http_unwrap(401, "unauthorized")
+            user = middleware.auth(req, mongo).unwrap(
+                error.HttpErr(401, "unauthorized")
+            )
             db.delete_user_by_id(mongo, user._id)
             res.set_cookie(key="session_token", value="")
             return http.success(res, 200)
